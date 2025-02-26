@@ -1,0 +1,53 @@
+---
+title: "Download.R"
+output: html_document
+date: "2025-02-26"
+---
+
+```{r}
+library(rentrez)
+```
+
+
+This define a list of GenBank IDs for Borrelia burgdorferi 16S rRNA sequences
+```{r}
+ncbi_ids <- c("HQ433692.1","HQ433694.1","HQ433691.1")
+```
+Load the packages that we need to use 
+```{r}
+library(rentrez)
+library(knitr)
+```
+Fetch the sequences in FASTA format from GenBank
+```{r}
+Bburg<-entrez_fetch(db = "nuccore", id = ncbi_ids, rettype = "fasta")
+```
+
+```{r}
+print(Bburg)
+```
+
+```{r}
+Sequences <- strsplit(Bburg, "\n>")[[1]]
+```
+
+```{r}
+Sequences <- unlist(Sequences)
+```
+
+```{r}
+header <- gsub("(^>.*)\\n[ATCG].*", "\\1", Sequences)
+```
+
+```{r}
+seq <- gsub("^>.*\\n([ATCG].*)", "\\1", Sequences)
+```
+
+```{r}
+Sequences <- data.frame(Name = header, Sequence = seq)
+```
+
+
+```{r}
+write.csv(Sequences, "Sequences.csv", row.names = FALSE)
+```

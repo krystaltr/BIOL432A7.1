@@ -1,0 +1,123 @@
+---
+title: "Analysis"
+output: html_document
+date: "2025-02-26"
+---
+
+```{r}
+library("BiocManager")
+```
+```{r}
+BiocManager::install(c("annotate",  "rentrez"))
+```
+
+```{r}
+library(rentrez)
+```
+
+```{r}
+library(annotate)
+```
+```{r}
+library(stringr)
+```
+
+```{r}
+library(knitr)
+```
+
+```{r}
+Sequences <- read.csv("Sequences.csv")
+```
+
+```{r}
+Sequences$Name <- gsub(">?(\\S+).*", "\\1", Sequences$Name)
+```
+
+```{r}
+count_nucleotides <- function(seq) {
+  list(
+    A = nchar(gsub("[^A]", "", seq)),
+    T = nchar(gsub("[^T]", "", seq)),
+    C = nchar(gsub("[^C]", "", seq)),
+    G = nchar(gsub("[^G]", "", seq))
+  )
+}
+```
+
+```{r}
+nucleotide_counts <- t(sapply(Sequences$Sequence, count_nucleotides))
+```
+
+```{r}
+nucleotide_counts <- as.data.frame(nucleotide_counts)
+```
+
+```{r}
+rownames(nucleotide_counts) <- Sequences$Name
+```
+
+```{r}
+kable(nucleotide_counts, caption="Nucleotide Composition of Sequences")
+```
+
+```{r}
+Sequences$Name <- gsub(">?(\\S+).*", "\\1", Sequences$Name)
+```
+
+```{r}
+gccontent <- function(seq) {
+  gc_count <- str_count(seq, "[GC]") 
+  total_length <- nchar(seq)         
+  return(round((gc_count / total_length) * 100, 2))  
+}
+```
+
+```{r}
+gcvalues <- sapply(Sequences$Sequence, gccontent)
+```
+```{r}
+gcdf <- data.frame(GC_Content = gcvalues, row.names = Sequences$Name)
+```
+
+```{r}
+gcdf <- as.data.frame(gcvalues)
+```
+
+```{r}
+kable(gcdf, caption = "GC % for Each Sequence", align = "c")
+```
+
+```{r}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/f/f3/Borrelia_burgdorferi_%28CDC-PHIL_-6631%29_lores.jpg")
+```
+
+PART 2:
+
+
+
+```{r}
+seq <- "GCCTGATGGAGGGGGATAACTACTGGAAACGGTAGCTAATACCGCATGAC
+CTCGCAAGAGCAAAGTGGGGGACCTTAGGGCCTCACGCCATCGGATGAAC
+CCAGATGGGATTAGCTAGTAGGTGGGGTAATGGCTCACCTAGGCGACGAT
+CCCTAGCTGGTCTGAGAGGATGACCAGCCACACTGGAACTGAGACACGGT
+CCAGACTCCTACGGGAGGCAGCAGTGGGGAATATTGCACAATGGGCGCAA"
+```
+
+```{r}
+seq <- gsub("\n", "", seq)
+```
+
+```{r}
+blast_results <- blastSequences(
+  paste(seq), 
+  as = "data.frame",
+  hitListSize = 1,
+  timeout = 30
+)
+```
+
+```{r}
+print(blast_results)
+```
+This sequence has the highest match to a gram-negative, non-motile coccobacillus bacterium, Yersinia pestis
